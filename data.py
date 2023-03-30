@@ -1,6 +1,8 @@
 import numpy as np
 from matplotlib import pyplot as plt
 
+import math
+
 voltage = 25e3
 time_span = 20
 LiF_d = 201.38 * 1e-12
@@ -43,7 +45,11 @@ print('write between', counts2[counts_index2 - 1], 'and', counts2[counts_index2]
 angles_in_radians = angles * np.pi / 180
 angles_in_radians2 = angles2 * np.pi / 180
 lambdas = 2 * LiF_d * np.sin(angles_in_radians)
+upper_lambda = 2 * LiF_d * np.sin(angles_in_radians + 0.13 * np.pi / 180)
+lower_lambda = 2 * LiF_d * np.sin(angles_in_radians - 0.13 * np.pi / 180)
 lambdas2 = 2 * LiF_d * np.sin(angles_in_radians2)
+upper_lambda2 = 2 * LiF_d * np.sin(angles_in_radians2 + 0.13 * np.pi / 180)
+lower_lambda2 = 2 * LiF_d * np.sin(angles_in_radians2 - 0.13 * np.pi / 180)
 
 # factor for d:  * 0.685e12
 
@@ -53,6 +59,78 @@ def getErrors(_counts):
     rate_err = np.sqrt(_counts) / time_span
     combined_rate_error = np.sqrt(rate_err ** 2 + background_rate_error ** 2)
     return combined_rate_error
+
+
+def error_on_lambda(delta_d, d, delta_theta, theta):
+    # Convert theta from degrees to radians
+    theta_rad = math.radians(theta)
+    delta_theta_rad = math.radians(delta_theta)
+
+    # Calculate the partial derivatives
+    d_lambda_d_d = 2 * math.sin(theta_rad)
+    d_lambda_d_theta = 2 * d * math.cos(theta_rad)
+
+    # Propagate the errors using Gaussian error propagation formula
+    delta_lambda = math.sqrt((d_lambda_d_d * delta_d)**2 + (d_lambda_d_theta * delta_theta_rad)**2)
+
+    _lambda = 2 * d * math.sin(theta_rad)
+
+    return _lambda, delta_lambda
+
+
+def errorOnK(theta_min, theta_max):
+
+    K1, delK1 = error_on_lambda(1e-12, LiF_d, 0.13, theta_min)
+    K2, delK2 = error_on_lambda(1e-12, LiF_d, 0.13, theta_max)
+
+    mean = (K1 + K2) / 2
+
+    del_mean = np.sqrt(delK1 ** 2 + delK2 ** 2)
+
+    return mean, del_mean
+
+
+lambda_gr, delta_lambda_gr = error_on_lambda(1e-12, LiF_d, 0.67, 6.135)
+print('M1) lambda_gr = (', round(lambda_gr * 1e12, 3), '+-', round(delta_lambda_gr * 1e12, 3), ') pm')
+
+lambda_gr2, delta_lambda_gr2 = error_on_lambda(1e-12, LiF_d, 1.43, 9.52)
+print('M2) lambda_gr = (', round(lambda_gr2 * 1e12, 3), '+-', round(delta_lambda_gr2 * 1e12, 3), ') pm')
+
+K_beta_l, delta_K_beta_l = error_on_lambda(1e-12, LiF_d, 0.13, 19.6)
+print('M1) K_beta_l = (', round(K_beta_l * 1e12, 3), '+-', round(delta_K_beta_l * 1e12, 3), ') pm')
+
+K_beta_r, delta_K_beta_r = error_on_lambda(1e-12, LiF_d, 0.13, 20.83)
+print('M1) K_beta_r = (', round(K_beta_r * 1e12, 3), '+-', round(delta_K_beta_r * 1e12, 3), ') pm')
+
+K_alpha_l, delta_K_alpha_l = error_on_lambda(1e-12, LiF_d, 0.13, 21.8)
+print('M1) K_beta_r = (', round(K_alpha_l * 1e12, 3), '+-', round(delta_K_alpha_l * 1e12, 3), ') pm')
+
+K_alpha_r, delta_K_alpha_r = error_on_lambda(1e-12, LiF_d, 0.13, 23.15)
+print('M1) K_beta_r = (', round(K_alpha_r * 1e12, 3), '+-', round(delta_K_alpha_r * 1e12, 3), ') pm')
+
+K_beta, delta_K_beta = errorOnK(19.6, 20.83)
+print('\nM1) K_beta_r = (', round(K_beta * 1e12, 3), '+-', round(delta_K_beta * 1e12, 3), ') pm\n')
+
+K_alpha, delta_K_alpha = errorOnK(21.8, 23.15)
+print('M1) K_beta_r = (', round(K_alpha * 1e12, 3), '+-', round(delta_K_alpha * 1e12, 3), ') pm\n')
+
+K_beta_l2, delta_K_beta_l2 = error_on_lambda(1e-12, LiF_d, 0.13, 29.8)
+print('M2) K_beta_l = (', round(K_beta_l2 * 1e12, 3), '+-', round(delta_K_beta_l2 * 1e12, 3), ') pm')
+
+K_beta_r2, delta_K_beta_r2 = error_on_lambda(1e-12, LiF_d, 0.13, 31.04)
+print('M1) K_beta_r = (', round(K_beta_r2 * 1e12, 3), '+-', round(delta_K_beta_r2 * 1e12, 3), ') pm')
+
+K_alpha_l2, delta_K_alpha_l2 = error_on_lambda(1e-12, LiF_d, 0.13, 33.4)
+print('M1) K_beta_r = (', round(K_alpha_l2 * 1e12, 3), '+-', round(delta_K_alpha_l2 * 1e12, 3), ') pm')
+
+K_alpha_r2, delta_K_alpha_r2 = error_on_lambda(1e-12, LiF_d, 0.13, 34.84)
+print('M1) K_beta_r = (', round(K_alpha_r2 * 1e12, 3), '+-', round(delta_K_alpha_r2 * 1e12, 3), ') pm')
+
+K_beta2, delta_K_beta2 = errorOnK(29.8, 31.04)
+print('\nM1) K_beta_r = (', round(K_beta2 * 1e12, 3), '+-', round(delta_K_beta2 * 1e12, 3), ') pm\n')
+
+K_alpha2, delta_K_alpha2 = errorOnK(33.4, 34.84)
+print('M1) K_beta_r = (', round(K_alpha2 * 1e12, 3), '+-', round(delta_K_alpha2 * 1e12, 3), ') pm\n')
 
 
 rate = counts / time_span
@@ -69,25 +147,49 @@ lower2 = rate2 - rate2_error
 
 
 if len(angles2) == len(counts2):
-    plt.figure(figsize=(12, 7))
+    plt.figure(figsize=(12, 6))
 
     plt.subplot(2, 1, 1)
+
+    plt.title('Vergleich der beiden Spektren')
+    # plt.xlabel(r'Winkel $\theta$ in [°]')
+    plt.ylabel(r'Zählrate in [s$^{-1}$]')
+
     plt.fill_between(angles2, upper2, lower2, where=upper2 >= lower2, interpolate=True, color='pink',
                      alpha=0.5)
-    plt.scatter(angles2, rate2, marker='o', s=3, c='b')
-    plt.semilogy(angles2, rate2, lw=0.7, ls='--', c='black')
+    plt.fill_between(angles2 + 0.13, upper2, lower2, where=upper2 >= lower2, interpolate=True, color='pink',
+                     alpha=0.5)
+    plt.fill_between(angles2 - 0.13, upper2, lower2, where=upper2 >= lower2, interpolate=True, color='pink',
+                     alpha=0.5, label='Konfidenzband')
+    # plt.errorbar(angles2, rate2, xerr=np.zeros(len(angles2)) + 0.13, fmt='none', capsize=3,
+    #              capthick=0.6, elinewidth=0.6, ecolor='black')
+    plt.scatter(angles2, rate2, marker='o', s=3, c='b', label='Messdaten')
+    plt.semilogy(angles2, rate2, lw=0.7, ls='--', c='black', label='Verbindungslinie')
     # plt.xlim(130, 180)
+    plt.xlim(0, 45)
+    plt.legend()
 
     plt.subplot(2, 1, 2)
-    plt.fill_between(lambdas * 1e12, upper1, lower1, where=upper1 >= lower1, interpolate=True, color='pink',
-                     alpha=0.5)
 
-    # plt.plot(lambdas * 1e12, (counts / 20 + getErrors(counts)), c='cyan', alpha=0.5)
-    # plt.plot(lambdas * 1e12, (counts / 20 - getErrors(counts)), c='cyan', alpha=0.5)
-    plt.semilogy(lambdas * 1e12, rate, lw=0.7, ls='--', c='black')
-    plt.scatter(lambdas * 1e12, rate, marker='o', s=3, c='b')
+    plt.xlabel(r'Winkel $\theta$ in [°]')
+    plt.ylabel(r'Zählrate in [s$^{-1}$]')
+
+    plt.fill_between(angles, upper1, lower1, where=upper1 >= lower1, interpolate=True, color='pink',
+                     alpha=0.6)
+    plt.fill_between(angles + 0.13, upper1, lower1, where=upper1 >= lower1, interpolate=True, color='pink',
+                     alpha=0.6)
+    plt.fill_between(angles - 0.13, upper1, lower1, where=upper1 >= lower1, interpolate=True, color='pink',
+                     alpha=0.6, label='Konfidenzband')
+
+    plt.semilogy(angles, rate, lw=0.7, ls='--', c='black', label='Verbindungslinie')
+    # plt.errorbar(angles, rate, xerr=np.zeros(len(angles)) + 0.13, fmt='none', capsize=3,
+    #              capthick=0.6, elinewidth=0.6, ecolor='black')
+    plt.scatter(angles, rate, marker='o', s=3, c='b', label='Messdaten')
+    plt.xlim(0, 45)
     # plt.xlim(130, 180)
 
-    plt.subplots_adjust(top=0.9, bottom=0.08, left=0.1, right=0.95)
+    plt.subplots_adjust(top=0.95, bottom=0.08, left=0.08, right=0.95)
+    plt.legend()
+    plt.savefig('Spektrum_vergleich.png', dpi=300)
 
     plt.show()
