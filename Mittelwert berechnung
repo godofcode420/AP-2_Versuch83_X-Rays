@@ -1,0 +1,22 @@
+import numpy as np
+
+# Definiere die Werte und Unsicherheiten
+d_g = np.array([130.13, 24.00])  # Einheit: pm
+d_K_alpha = np.array([137.42, 2.98])  # Einheit: pm
+d_K_beta = np.array([137.23, 3.27])  # Einheit: pm
+
+# Berechne die Gewichte
+weights_g = 1.0 / (d_g[1] ** 2)
+weights_K_alpha = 1.0 / (d_K_alpha[1] ** 2)
+weights_K_beta = 1.0 / (d_K_beta[1] ** 2)
+
+# Berechne die gewichtete Mittelung
+weighted_mean = np.average([d_g[0], d_K_alpha[0], d_K_beta[0]],
+                           weights=[weights_g, weights_K_alpha, weights_K_beta])
+
+# Berechne die Unsicherheit der gewichteten Mittelung
+weighted_std = np.sqrt(1.0 / np.sum([weights_g, weights_K_alpha, weights_K_beta]))
+
+# Gib das Ergebnis aus
+print("Das gewichtete Mittel beträgt:", weighted_mean, "pm")
+print("Die Unsicherheit des gewichteten Mittels beträgt:", weighted_std, "pm")
